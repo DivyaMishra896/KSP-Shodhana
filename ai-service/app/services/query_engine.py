@@ -79,6 +79,14 @@ class QueryEngine:
                 visualizations=["timeline", "evidence"],
                 summary="Showing investigation timeline logs for FIR KA/2026/00101.",
             )
+        elif "sociological" in text_lower or "demographic" in text_lower or "age" in text_lower or "urban" in text_lower or "rural" in text_lower or "insight" in text_lower:
+            return UnderstandResponse(
+                intent="crime_stats",
+                entities=[],
+                filters=QueryFilters(),
+                visualizations=["sociological_insights", "heatmap", "evidence"],
+                summary="Displaying sociological crime insights, age group distribution, and urban/rural area analysis.",
+            )
         return UnderstandResponse(
             intent="search_crimes",
             entities=[],

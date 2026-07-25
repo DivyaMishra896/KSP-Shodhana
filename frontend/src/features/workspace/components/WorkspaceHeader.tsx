@@ -2,13 +2,22 @@
 
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { RoleSelector } from "@/components/security/RoleSelector";
+import type { VisualizationType } from "@/types/domain";
 
 export default function WorkspaceHeader() {
-  const { clearWorkspace, isQuerying, setActiveTab } = useWorkspaceStore();
+  const { clearWorkspace, isQuerying, setActiveTab, activeVisualizations, setActiveVisualizations } = useWorkspaceStore();
 
   const handleHomeClick = () => {
     setActiveTab("dashboard");
     clearWorkspace();
+  };
+
+  const toggleVis = (type: VisualizationType) => {
+    if (activeVisualizations.includes(type)) {
+      setActiveVisualizations(activeVisualizations.filter((t) => t !== type));
+    } else {
+      setActiveVisualizations([...activeVisualizations, type]);
+    }
   };
 
   return (
@@ -27,6 +36,40 @@ export default function WorkspaceHeader() {
           AI-Powered Crime Intelligence Platform & Multi-Hop Network Workspace
         </p>
       </button>
+
+      {/* Quick Visualization Toggles */}
+      <div className="hidden lg:flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+        <button
+          onClick={() => toggleVis("network_graph")}
+          className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${
+            activeVisualizations.includes("network_graph")
+              ? "bg-[var(--color-primary)] text-white shadow-xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+          }`}
+        >
+          🕸️ Network
+        </button>
+        <button
+          onClick={() => toggleVis("heatmap")}
+          className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${
+            activeVisualizations.includes("heatmap")
+              ? "bg-[var(--color-primary)] text-white shadow-xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+          }`}
+        >
+          🗺️ Heatmap
+        </button>
+        <button
+          onClick={() => toggleVis("sociological_insights")}
+          className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${
+            activeVisualizations.includes("sociological_insights")
+              ? "bg-[var(--color-primary)] text-white shadow-xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+          }`}
+        >
+          📊 Sociological
+        </button>
+      </div>
 
       {/* Role Switcher + Status + Actions */}
       <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">

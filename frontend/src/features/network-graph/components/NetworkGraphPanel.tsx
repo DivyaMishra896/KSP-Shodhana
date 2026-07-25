@@ -5,6 +5,8 @@ import ForceGraph2D from "react-force-graph-2d";
 import type { NetworkGraphData, GraphNode } from "@/types/domain";
 import { RISK_COLORS } from "@/lib/constants";
 
+import CriminalProfileModal from "@/features/workspace/components/CriminalProfileModal";
+
 interface NetworkGraphPanelProps {
   data: NetworkGraphData | null;
 }
@@ -14,10 +16,22 @@ export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
   const graphWrapperRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
 
+  const [selectedCriminalId, setSelectedCriminalId] = useState<number | null>(null);
+
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
     width: 600,
     height: 400,
   });
+
+  const handleNodeClick = useCallback((node: any) => {
+    if (node.type === "criminal") {
+      const rawId = String(node.id).replace("criminal-", "");
+      const id = parseInt(rawId, 10);
+      if (!isNaN(id)) {
+        setSelectedCriminalId(id);
+      }
+    }
+  }, []);
 
   // Track container dimensions dynamically with ResizeObserver
   useEffect(() => {
@@ -147,9 +161,17 @@ export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
             ctx.fillStyle = "rgba(44, 44, 36, 0.9)";
             ctx.fillText(label, node.x!, node.y! + 9);
           }}
+          onNodeClick={handleNodeClick}
           cooldownTicks={120}
         />
       </div>
+
+      {selectedCriminalId && (
+        <CriminalProfileModal
+          criminalId={selectedCriminalId}
+          onClose={() => setSelectedCriminalId(null)}
+        />
+      )}
     </div>
   );
 }

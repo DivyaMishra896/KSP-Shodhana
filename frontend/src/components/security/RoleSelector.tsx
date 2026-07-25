@@ -4,7 +4,11 @@ import React from 'react';
 import { useAuthStore, OfficerRole } from '@/features/auth/useAuthStore';
 
 export const RoleSelector: React.FC = () => {
-  const { currentRole, officerName, setRole } = useAuthStore();
+  const { currentRole, officerName, jwtToken, setRole, initToken } = useAuthStore();
+
+  React.useEffect(() => {
+    initToken();
+  }, [initToken]);
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setRole(e.target.value as OfficerRole);
@@ -16,8 +20,9 @@ export const RoleSelector: React.FC = () => {
         <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
       </svg>
       <div className="flex flex-col text-left">
-        <span className="text-[9px] uppercase font-bold tracking-wider text-[var(--color-text-muted)] leading-none mb-0.5">
+        <span className="text-[9px] uppercase font-bold tracking-wider text-[var(--color-text-muted)] leading-none mb-0.5 flex items-center gap-1">
           RBAC: <span className="text-[var(--color-text)] font-extrabold">{officerName}</span>
+          {jwtToken && <span className="text-[8px] font-extrabold bg-emerald-500/20 text-emerald-700 px-1 rounded" title="Authenticated with real cryptographic HS256 JWT token">JWT ✓</span>}
         </span>
         <select
           value={currentRole}

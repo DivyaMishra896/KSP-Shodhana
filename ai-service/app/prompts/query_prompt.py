@@ -61,6 +61,7 @@ Parse the investigator's query into a structured intelligence intent with extrac
    - heatmap: Include for queries involving locations, hotspots, or district maps
    - timeline: Include for queries involving chronological progress or event logs
    - evidence: Always include for explainable intelligence claims
+   - sociological_insights: Include for queries involving demographics, offender age groups, urban vs rural area distributions, or sociological crime patterns
 
 4. Provide a brief SUMMARY of the intent in clean English.
 

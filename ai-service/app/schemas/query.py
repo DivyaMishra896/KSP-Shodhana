@@ -50,5 +50,5 @@ class UnderstandResponse(BaseModel):
     intent: str = Field(description="Query intent: greeting, search_crimes, find_criminal, show_network, crime_hotspots, timeline, crime_stats, general_question")
     entities: list[Entity] = Field(description="Extracted entities from the query")
     filters: QueryFilters = Field(description="Extracted query filters")
-    visualizations: list[str] = Field(description="Recommended visualizations: network_graph, heatmap, timeline, evidence")
+    visualizations: list[str] = Field(description="Recommended visualizations: network_graph, heatmap, timeline, evidence, sociological_insights")
     summary: str = Field(description="Brief natural language summary of what was understood")

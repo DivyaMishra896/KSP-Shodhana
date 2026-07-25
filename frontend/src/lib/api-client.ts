@@ -15,6 +15,17 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
+// Request interceptor to dynamically inject real cryptographic JWT Authorization header
+apiClient.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("ksp_jwt_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
 // Response interceptor for consistent error handling
 apiClient.interceptors.response.use(
   (response) => response,
