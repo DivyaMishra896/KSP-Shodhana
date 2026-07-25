@@ -46,8 +46,16 @@ class QueryEngine:
             return self._heuristic_fallback(text)
 
     def _heuristic_fallback(self, text: str) -> UnderstandResponse:
-        text_lower = text.lower()
-        if "network" in text_lower or "ಜಾಲ" in text_lower:
+        text_lower = text.lower().strip()
+        if text_lower in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste", "namaskara", "ನಮಸ್ಕಾರ", "ಹಲೋ"]:
+            return UnderstandResponse(
+                intent="greeting",
+                entities=[],
+                filters=QueryFilters(),
+                visualizations=["heatmap", "evidence"],
+                summary="Greetings Officer! Welcome to KSP Shodhana Crime Intelligence Workspace. How can I assist your investigation today?",
+            )
+        elif "network" in text_lower or "ಜಾಲ" in text_lower:
             return UnderstandResponse(
                 intent="show_network",
                 entities=[Entity(type="person", value="Ravi Kumar", confidence=0.9)],

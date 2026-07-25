@@ -41,6 +41,7 @@ Parse the investigator's query into a structured intelligence intent with extrac
 
 ## Classification Guidelines
 1. Select the PRIMARY INTENT:
+   - greeting: Conversational greetings, welcomes, or salutations (e.g., "hi", "hello", "good morning", "namaskara", "ನಮಸ್ಕಾರ")
    - search_crimes: Searching for FIRs or crime records by category, location, or severity
    - find_criminal: Searching for suspect profiles, aliases, or criminal history
    - show_network: Mapping criminal relationships, co-accused links, or gang networks

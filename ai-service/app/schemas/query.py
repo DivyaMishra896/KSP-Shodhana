@@ -47,7 +47,7 @@ class QueryFilters(BaseModel):
 
 class UnderstandResponse(BaseModel):
     """Output from the /ai/v1/understand endpoint. Used as Gemini structured output schema."""
-    intent: str = Field(description="Query intent: search_crimes, find_criminal, show_network, crime_hotspots, timeline, crime_stats, general_question")
+    intent: str = Field(description="Query intent: greeting, search_crimes, find_criminal, show_network, crime_hotspots, timeline, crime_stats, general_question")
     entities: list[Entity] = Field(description="Extracted entities from the query")
     filters: QueryFilters = Field(description="Extracted query filters")
     visualizations: list[str] = Field(description="Recommended visualizations: network_graph, heatmap, timeline, evidence")

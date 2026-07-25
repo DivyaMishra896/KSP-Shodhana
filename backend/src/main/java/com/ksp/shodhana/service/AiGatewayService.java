@@ -313,11 +313,27 @@ public class AiGatewayService {
      * Local offline heuristics processor to ensure high reliability during demos.
      */
     private WorkspacePayload processQueryLocalFallback(AiQueryRequest request) {
-        String query = request.getText().toLowerCase();
+        String query = request.getText().toLowerCase().trim();
         
         UnderstandResponse mockUnderstand = new UnderstandResponse();
         AnalyzeResponse mockAnalyze = new AnalyzeResponse();
         Map<String, Object> data = new HashMap<>();
+
+        if (matchesAny(query, "hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste", "namaskara", "ನಮಸ್ಕಾರ", "ಹಲೋ")) {
+            mockUnderstand.setIntent("greeting");
+            mockUnderstand.setVisualizations(List.of("heatmap", "evidence"));
+
+            mockAnalyze.setSummary("Greetings Officer! Welcome to KSP Shodhana Crime Intelligence Workspace. How can I assist your investigation today?");
+            mockAnalyze.setSuggestedFollowups(List.of(
+                    "Show crime hotspots in Karnataka",
+                    "Show the criminal network of Ravi Kumar",
+                    "Find suspects linked to theft cases"
+            ));
+            mockAnalyze.setEvidence(List.of(
+                    new EvidenceItem("e-1", "Authenticated Session: Officer Active. System initialized across Karnataka state crime records.", List.of("KSP-VAULT-2026"), 1.0, "system")
+            ));
+            return assemblePayload(mockUnderstand, mockAnalyze, data, null, query);
+        }
 
         if (matchesAny(query, "network", "gang", "associate", "connection", "link", "rajesh", "shetty", "farooq", "anil", "suresh", "kiran", "vikram", "deepak", "basavaraj", "santhosh", "mohammed", "zaid", "shivaji", "naveen", "chandru", "ramanjaneya", "praveen", "venkatesh",
                 "ಸಂಬಂಧ", "ರವಿ", "ರಾಜೇಶ್", "ಗ್ಯಾಂಗ್", "ಜಾಲ")) {

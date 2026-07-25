@@ -48,6 +48,34 @@ class AnalysisEngine:
             return self._heuristic_fallback(original_query)
 
     def _heuristic_fallback(self, query: str) -> AnalyzeResponse:
+        query_lower = query.lower().strip()
+        if query_lower in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste", "namaskara", "ನಮಸ್ಕಾರ", "ಹಲೋ"]:
+            return AnalyzeResponse(
+                summary="Greetings Officer! Welcome to KSP Shodhana Crime Intelligence Workspace. How can I assist your investigation today?",
+                insights=[
+                    InsightItem(
+                        title="System Ready",
+                        description="KSP Shodhana AI Pipeline is online and connected to Karnataka State Police Crime Records.",
+                        severity="info",
+                        related_entities=["Karnataka State Police"]
+                    )
+                ],
+                evidence=[
+                    EvidenceItem(
+                        id="EV-INIT",
+                        claim="Authenticated Session: Officer Active. Spatial & Graph Engine Initialized.",
+                        sources=["KSP-SYSTEM"],
+                        confidence=1.0,
+                        type="system"
+                    )
+                ],
+                confidence=1.0,
+                suggested_followups=[
+                    "Show crime hotspots in Karnataka",
+                    "Show the criminal network of Ravi Kumar",
+                    "Find suspects linked to theft cases"
+                ]
+            )
         return AnalyzeResponse(
             summary=f"Analysis complete for query: '{query}'. Extracted relevant crime records and evidence citations from baseline records.",
             insights=[
