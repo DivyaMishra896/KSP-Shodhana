@@ -1,5 +1,6 @@
 package com.ksp.shodhana.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,9 +18,16 @@ public class TimelineEvent {
 
     private Long rowId;
     private Long investigationRowId;
-    private String eventType;       // FIR Filed, Arrest, Witness Statement, Evidence Found, etc.
+
+    @JsonAlias({"eventType", "type"})
+    private String eventType;
+
+    @JsonAlias({"eventDate", "timestamp", "date"})
     private String eventDate;
+
     private String title;
     private String description;
+
+    @JsonAlias({"createdBy", "officerName", "officer"})
     private String createdBy;
 }

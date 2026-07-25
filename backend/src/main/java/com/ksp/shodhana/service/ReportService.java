@@ -166,10 +166,16 @@ public class ReportService {
             sb.append("<p style='font-size: 13px; color: #64748b;'>No timeline logs recorded for this investigation.</p>");
         } else {
             for (TimelineEvent event : timeline) {
+                String typeTag = (event.getEventType() != null && !event.getEventType().trim().isEmpty() && !"null".equalsIgnoreCase(event.getEventType()))
+                        ? " [" + event.getEventType() + "]"
+                        : "";
+                String dateStr = event.getEventDate() != null ? event.getEventDate() : "2026-06-15";
+                String officerStr = event.getCreatedBy() != null ? event.getCreatedBy() : "KSP Officer";
+
                 sb.append("<div class='timeline-item'>");
                 sb.append("<div class='timeline-dot'></div>");
-                sb.append("<div class='timeline-date'>").append(event.getEventDate() != null ? event.getEventDate() : "2026-06-15").append(" · ").append(event.getCreatedBy() != null ? event.getCreatedBy() : "KSP Officer").append("</div>");
-                sb.append("<div class='timeline-title'>").append(event.getTitle()).append(" [").append(event.getEventType()).append("]</div>");
+                sb.append("<div class='timeline-date'>").append(dateStr).append(" · ").append(officerStr).append("</div>");
+                sb.append("<div class='timeline-title'>").append(event.getTitle()).append(typeTag).append("</div>");
                 sb.append("<div class='timeline-desc'>").append(event.getDescription()).append("</div>");
                 sb.append("</div>");
             }
