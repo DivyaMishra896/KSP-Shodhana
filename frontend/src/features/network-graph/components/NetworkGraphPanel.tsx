@@ -14,7 +14,8 @@ interface NetworkGraphPanelProps {
 export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphWrapperRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<{ zoomToFit?: (duration?: number, padding?: number) => void } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const graphRef = useRef<any>(null);
 
   const [selectedCriminalId, setSelectedCriminalId] = useState<number | null>(null);
 
@@ -153,13 +154,13 @@ export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
           backgroundColor="transparent"
           nodeCanvasObjectMode={() => "after"}
           nodeCanvasObject={(node: Record<string, unknown>, ctx: CanvasRenderingContext2D, globalScale: number) => {
-            const label = node.name || "";
+            const label = String(node.name || "");
             const fontSize = Math.max(11 / globalScale, 3.5);
             ctx.font = `bold ${fontSize}px Nunito, sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "top";
             ctx.fillStyle = "rgba(44, 44, 36, 0.9)";
-            ctx.fillText(label, node.x!, node.y! + 9);
+            ctx.fillText(label, node.x as number, (node.y as number) + 9);
           }}
           onNodeClick={handleNodeClick}
           cooldownTicks={120}

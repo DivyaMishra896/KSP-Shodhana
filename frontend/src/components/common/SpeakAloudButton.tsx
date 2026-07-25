@@ -38,7 +38,7 @@ export default function SpeakAloudButton({ text }: SpeakAloudButtonProps) {
   }, []);
 
   const handleToggleSpeak = () => {
-    if (!supported || typeof window === "undefined") {
+    if (!isSupported || typeof window === "undefined") {
       alert("Text-to-Speech is not supported in this browser.");
       return;
     }

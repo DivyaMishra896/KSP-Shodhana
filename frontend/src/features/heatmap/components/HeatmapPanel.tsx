@@ -72,8 +72,6 @@ export default function HeatmapPanel({ data }: HeatmapPanelProps) {
     }
   };
 
-  const activeData = spatialData || data;
-
   if (!activeData || activeData.points.length === 0) {
     return (
       <div className="flex h-full flex-col rounded-2xl border border-[var(--color-border)]/50 bg-white shadow-sm overflow-hidden">

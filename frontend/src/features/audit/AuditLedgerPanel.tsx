@@ -22,24 +22,23 @@ export const AuditLedgerPanel: React.FC = () => {
   const [integrityVerified, setIntegrityVerified] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchLedger = () => {
+    setLoading(true);
     fetch('/api/proxy/api/v1/audit/ledger')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (isMounted && data) {
+        if (data) {
           setLogs(data.ledger || []);
           setIntegrityVerified(data.integrityVerified ?? true);
         }
       })
       .catch((e) => console.error('Audit ledger fetch error:', e))
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+      .finally(() => setLoading(false));
+  };
 
-    return () => {
-      isMounted = false;
-    };
+  useEffect(() => {
+    fetchLedger();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!isSuperintendent) {
