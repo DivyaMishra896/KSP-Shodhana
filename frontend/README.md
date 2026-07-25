@@ -4,31 +4,44 @@ The Next.js 14 presentation layer provides an interactive investigation workspac
 
 ---
 
+## Technical Architecture & Proxy Connectivity
+
+```
+  Browser UI (http://localhost:3000)
+             │
+             │ API Proxy Route (/api/proxy/[...path])
+             ▼
+  Spring Boot Core Backend Engine (http://localhost:8080)
+```
+
+The Next.js App Router configures an internal BFF (Backend-For-Frontend) proxy under `src/app/api/proxy/[...path]/route.ts` that automatically forwards requests to the Spring Boot backend on `http://localhost:8080`, attaching cryptographic `Authorization: Bearer <token>` headers stored in local storage.
+
+---
+
 ## Technical Specifications
 
 * **Framework**: Next.js 14 (App Router)
 * **Language**: TypeScript (`5.0`)
 * **Port**: `3000`
-* **State Management**: Zustand (`5.0`) global workspace store
-* **Styling**: Tailwind CSS v4 organic design palette
+* **State Management**: Zustand (`5.0`) global workspace store (`useWorkspaceStore.ts`)
+* **Styling**: Tailwind CSS v4 organic design palette (`--color-primary: #5D7052`)
 * **Maps & Graphs**: Leaflet (`1.9.4`) spatial heatmaps & React Force Graph 2D (`1.29`) physics suspect graph
 * **Forensics Security**: `WatermarkOverlay.tsx` dynamic steganographic watermark overlay
 * **Multi-Language Audio**: `translator.ts` script translation engine for Devanagari Hindi (`hi-IN`) and Kannada (`kn-IN`) Web Speech TTS
 
 ---
 
-## Key Components
+## Key UI Components
 
 * `features/chat/`: AI Copilot input, message bubbles, real-time SSE streaming handler, and speak aloud buttons.
-* `features/heatmap/`: Interactive Leaflet crime density heatmap panel with district auto-zoom.
-* `features/network/`: 2D physics-directed suspect co-accused force graph panel.
-* `features/timeline/`: Chronological investigation event log panel.
-* `features/evidence/`: Explainable evidence cards with official FIR citations.
-* `components/security/WatermarkOverlay.tsx`: Forensic overlay rendering Officer Badge #, Timestamp, and Client IP.
+* `features/workspace/components/VisualizationGrid.tsx`: Dynamic dual-pane visualization grid auto-pairing Evidence cards with Network Graphs.
+* `features/workspace/components/SociologicalInsightsPanel.tsx`: Demographic age distribution and urban/rural locality charts.
+* `features/workspace/components/CriminalProfileModal.tsx`: Offender risk profiling modal displaying Criminology Risk Score (`Risk Score: 85/100`), `⚠️ REPEAT OFFENDER` tag, and plain-language explanation banner.
+* `features/workspace/components/WorkspaceHeader.tsx`: Responsive top header toolbar with RBAC role selector, cryptographic JWT badge, and quick visualization toggles.
 
 ---
 
-## Quickstart & Launch
+## Quickstart & Local Execution
 
 ```bash
 cd frontend
@@ -39,4 +52,4 @@ npm install
 # Start Next.js development server
 npm run dev
 ```
-Application accessible at `http://localhost:3000`.
+*Application accessible at*: `http://localhost:3000`.
