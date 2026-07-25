@@ -59,8 +59,10 @@ mvn spring-boot:run
 * `POST /api/v1/ai/query`: Primary investigation query processor returning full `WorkspacePayload`.
 * `GET /api/v1/ai/stream?query=...`: Real-time SSE token-by-token streaming endpoint.
 
-### Auth & Security
+### Auth & Security (RBAC)
 * `POST /api/v1/auth/token`: Issues cryptographic signed JJWT tokens (`ROLE_SUPERINTENDENT`, `ROLE_INSPECTOR`, `ROLE_OFFICER`).
+* `GET /api/v1/admin/unredacted-dossier/{crimeId}`: **Restricted Vault PII Endpoint** (Requires `ROLE_SUPERINTENDENT`). Returns unmasked classified Aadhaar, phone, and offshore Swiss account data.
+* `POST /api/v1/admin/purge-case/{crimeId}`: **Restricted Admin Action** (Requires `ROLE_SUPERINTENDENT`). High-security administrative case purge with cryptographic audit logging.
 * `GET /api/v1/audit/ledger`: WORM Cryptographic SHA-256 ledger endpoint.
 
 ### Record Management & Intelligence
