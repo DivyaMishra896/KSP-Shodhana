@@ -42,15 +42,33 @@ const QUICK_ACTIONS = [
         <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
       </svg>
     ),
+  {
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+        <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
+      </svg>
+    ),
     label: "Timeline",
     sub: "Investigation events",
     query: "Show the investigation timeline for FIR KA/2026/00101",
     color: "bg-blue-500",
   },
+  {
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+        <path d="M15.5 2A1.5 1.5 0 0014 3.5v13a1.5 1.5 0 001.5 1.5h1a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0016.5 2h-1zM9.5 6A1.5 1.5 0 008 7.5v9a1.5 1.5 0 001.5 1.5h1a1.5 1.5 0 001.5-1.5v-9A1.5 1.5 0 0010.5 6h-1zM3.5 10A1.5 1.5 0 002 11.5v5A1.5 1.5 0 003.5 18h1A1.5 1.5 0 006 16.5v-5A1.5 1.5 0 004.5 10h-1z" />
+      </svg>
+    ),
+    label: "Sociological",
+    sub: "Demographic insights",
+    query: "Show sociological crime insights and demographic distributions in Karnataka",
+    color: "bg-purple-600",
+  },
 ];
 
 const RECENT_QUERIES = [
   { text: "Which criminals are linked to the Mysuru jewelry robbery?", tag: "EVIDENCE", tagColor: "bg-[var(--color-primary)]" },
+  { text: "Show sociological demographic and age group analysis", tag: "SOCIOLOGICAL", tagColor: "bg-purple-600" },
   { text: "Show all cases with Critical severity", tag: "CRITICAL", tagColor: "bg-[var(--color-danger)]" },
   { text: "Map crime density in Bengaluru Urban", tag: "HEATMAP", tagColor: "bg-[var(--color-secondary)]" },
 ];
@@ -77,7 +95,7 @@ export default function WelcomeState({ showMinimal = false }: WelcomeStateProps)
       {/* Quick Actions Header */}
       <div>
         <h3 className="text-sm font-extrabold text-[var(--color-text)] mb-3">Quick Actions</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {QUICK_ACTIONS.map((action, idx) => (
             <button
               key={idx}
