@@ -44,7 +44,14 @@ export default function VisualizationGrid() {
   if (showHeatmap) activePanels.push(<HeatmapPanel key="heatmap" data={heatmapData} />);
   if (showSociological) activePanels.push(<SociologicalInsightsPanel key="sociological" />);
   if (showTimeline) activePanels.push(<TimelinePanel key="timeline" data={timelineData} />);
-  if (showEvidence) activePanels.push(<EvidencePanel key="evidence" data={evidenceData} />);
+
+  // If evidence is present, pair it with NetworkGraphPanel if no primary graph is active
+  if (showEvidence) {
+    if (activePanels.length === 0) {
+      activePanels.push(<NetworkGraphPanel key="network-auto" data={networkData} />);
+    }
+    activePanels.push(<EvidencePanel key="evidence" data={evidenceData} />);
+  }
 
   // Split pane ratio for 2 side-by-side visualization panels (percentage 20% to 80%, default 50%)
   const [splitRatio, setSplitRatio] = useState(50);

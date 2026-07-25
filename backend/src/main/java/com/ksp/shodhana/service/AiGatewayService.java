@@ -169,8 +169,8 @@ public class AiGatewayService {
                 .visualizations(understand.getVisualizations())
                 .suggestedFollowups(analysis.getSuggestedFollowups());
 
-        // Dynamic Network Graph resolution
-        if (understand.getVisualizations().contains("network_graph")) {
+        // Dynamic Network Graph resolution (always populate if network_graph or evidence is active)
+        if (understand.getVisualizations().contains("network_graph") || understand.getVisualizations().contains("evidence")) {
             if (data.containsKey("network")) {
                 builder.networkGraph((WorkspacePayload.NetworkGraphData) data.get("network"));
             } else if (data.containsKey("criminals") && !((List<?>) data.get("criminals")).isEmpty()) {
