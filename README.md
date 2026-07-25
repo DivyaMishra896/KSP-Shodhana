@@ -88,21 +88,26 @@ To ensure ease of technical evaluation and robust production readiness, the syst
 
 ### Option A: Zero-Setup Local Execution (Default / Demo)
 
-Requires only Java 17+, Python 3.10+, and Node.js 18+.
+Requires only Java 17+, Python 3.10+, and Node.js 18+. Uses H2 in-memory database and BFS graph traversal — no Docker, PostgreSQL, or Neo4j needed.
 
 ```bash
-# 1. FastAPI AI Service (Terminal 1)
+# 1. Set required environment variables
+#    (or copy backend/.env.example to backend/.env and edit)
+export JWT_SECRET=$(openssl rand -base64 48)       # Required — app won't start without it
+export GEMINI_API_KEY=your_key_here                 # Required for AI features
+
+# 2. FastAPI AI Service (Terminal 1)
 cd ai-service
 python -m venv .venv
 # Windows: .venv\Scripts\activate | Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 
-# 2. Spring Boot Core Backend (Terminal 2)
+# 3. Spring Boot Core Backend (Terminal 2)
 cd backend
 mvn spring-boot:run
 
-# 3. Next.js Presentation UI (Terminal 3)
+# 4. Next.js Presentation UI (Terminal 3)
 cd frontend
 npm install
 npm run dev
@@ -116,8 +121,26 @@ Open **`http://localhost:3000`** in your browser.
 Runs PostgreSQL/PostGIS, Neo4j, Spring Boot, FastAPI, and Next.js as Docker containers.
 
 ```bash
+# 1. Copy the environment template and fill in required values
+cp .env.example .env
+
+# 2. Edit .env — you MUST set these (no safe defaults):
+#    JWT_SECRET    — generate with: openssl rand -base64 48
+#    GEMINI_API_KEY — get from: https://aistudio.google.com/app/apikey
+
+# 3. Build and start all services
 docker-compose up --build
 ```
+
+All other variables (ports, database credentials, Neo4j auth) have sensible defaults and only need to be changed for custom deployments. See `.env.example` for the full list.
+
+| Variable | Required? | Default | Purpose |
+|----------|-----------|---------|---------|
+| `JWT_SECRET` | **Yes** | _(none — fail fast)_ | JWT token signing key |
+| `GEMINI_API_KEY` | **Yes** | _(none)_ | Google Gemini API access |
+| `POSTGRES_PASSWORD` | No | `postgres` | PostgreSQL password |
+| `SPRING_PROFILES_ACTIVE` | No | `prod` (Docker) / `demo` (local) | Spring Boot profile |
+| `CORS_ORIGINS` | No | `http://localhost:3000` | Allowed CORS origins |
 
 ---
 
@@ -128,6 +151,7 @@ docker-compose up --build
 ├── backend/              # Spring Boot 3.3, Spring Data JPA, Security & Graph Services
 ├── ai-service/           # FastAPI, Gemini Client, PII Anonymizer, Vector RAG
 ├── docs/                 # System Architecture & Technical Specifications
+├── .env.example          # Root environment template (all Docker vars)
 └── docker-compose.yml    # Multi-container orchestration (PostGIS, Neo4j, App Services)
 ```
 

@@ -22,6 +22,8 @@ jobs:
           cache-dependency-path: 'backend/pom.xml'
 
       - name: Build & Run Spring Boot Test Suite
+        env:
+          JWT_SECRET: ci-test-only-not-for-production
         run: |
           cd backend
           mvn clean test -Dtest="!*IntegrationTest"

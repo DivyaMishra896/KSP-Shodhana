@@ -1,21 +1,19 @@
-version: '3.8'
-
 services:
   # 1. PostgreSQL + PostGIS Spatial Database Container
   postgres:
     image: postgis/postgis:15-3.3
     container_name: ksp-shodhana-postgres
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      - POSTGRES_DB=ksp_shodhana
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=${POSTGRES_DB:-ksp_shodhana}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ksp_shodhana"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ksp_shodhana}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,7 +26,7 @@ services:
       - "7474:7474" # HTTP Browser UI
       - "7687:7687" # Bolt Protocol Driver
     environment:
-      - NEO4J_AUTH=none # Development mode auth bypass
+      - NEO4J_AUTH=${NEO4J_AUTH:-none}
     volumes:
       - neo4j_data:/data
     restart: unless-stopped
@@ -45,12 +43,13 @@ services:
       dockerfile: Dockerfile
     container_name: ksp-shodhana-ai
     ports:
-      - "8000:8000"
+      - "${AI_SERVICE_PORT:-8000}:8000"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-flash-lite-latest}
       - PORT=8000
-      - CORS_ORIGINS=["http://localhost:3000","http://localhost:8080","http://frontend:3000"]
+      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:3000","http://localhost:8080","http://frontend:3000"]}
+      - BACKEND_URL=${BACKEND_INTERNAL_URL:-http://backend:8080}
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
@@ -66,13 +65,20 @@ services:
       dockerfile: Dockerfile
     container_name: ksp-shodhana-backend
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     environment:
       - PORT=8080
-      - AI_SERVICE_URL=http://ai-service:8000
-      - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ksp_shodhana
-      - SPRING_NEO4J_URI=bolt://neo4j:7687
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS:-28800000}
+      - AI_SERVICE_URL=${AI_SERVICE_INTERNAL_URL:-http://ai-service:8000}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:-ksp_shodhana}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
+      - SPRING_JPA_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_NEO4J_URI=${SPRING_NEO4J_URI:-bolt://neo4j:7687}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://frontend:3000}
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,6 +87,12 @@ services:
       ai-service:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # 5. Next.js Presentation UI Frontend
   frontend:
@@ -89,13 +101,14 @@ services:
       dockerfile: Dockerfile
     container_name: ksp-shodhana-frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - BACKEND_URL=http://backend:8080
+      - BACKEND_API_URL=${BACKEND_API_URL:-http://backend:8080}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

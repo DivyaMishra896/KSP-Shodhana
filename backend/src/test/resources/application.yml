@@ -1,0 +1,45 @@
+# Test-specific configuration overrides.
+# Provides a test-only JWT secret so the fail-fast guard in JwtTokenProvider
+# doesn't block unit test execution. This value is NOT used in production.
+#
+# NOTE: Spring Boot test resources REPLACE (not merge with) main resources,
+# so this file must include all properties the app needs to start.
+
+server:
+  port: 0  # random port for tests
+
+spring:
+  application:
+    name: ksp-shodhana-backend
+  profiles:
+    active: demo
+
+  # H2 in-memory for tests
+  datasource:
+    url: jdbc:h2:mem:ksp_shodhana_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  # Disable Flyway for H2 tests (migrations are PostgreSQL-specific)
+  flyway:
+    enabled: false
+
+# JWT Authentication
+jwt:
+  secret: ksp-shodhana-test-only-jwt-secret-do-not-use-in-production
+  expiration-ms: 28800000
+
+# AI Service (points nowhere — tests don't need live AI service)
+ai-service:
+  base-url: http://localhost:9999
+  timeout-ms: 5000
+
+# CORS
+cors:
+  allowed-origins: http://localhost:3000
