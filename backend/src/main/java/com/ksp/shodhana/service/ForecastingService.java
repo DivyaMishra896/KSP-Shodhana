@@ -10,17 +10,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
  * Service for Crime Forecasting & Early Warning Trend Detection.
- * Computes moving averages, linear trend direction, and emerging cluster flags.
+ * Computes moving averages, linear trend direction, and emerging cluster flags dynamically
+ * from actual dateOccurred / dateReported timestamps in filtered crime records.
  */
 @Service
 public class ForecastingService {
 
     private static final Logger log = LoggerFactory.getLogger(ForecastingService.class);
     private final LocalDataStore localDataStore;
+
+    private static final DateTimeFormatter DISPLAY_FORMATTER = DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH);
 
     public ForecastingService(LocalDataStore localDataStore) {
         this.localDataStore = localDataStore;
@@ -42,31 +47,79 @@ public class ForecastingService {
                     .toList();
         }
 
-        // Monthly bucket aggregation
-        Map<String, Integer> monthlyCounts = new LinkedHashMap<>();
-        monthlyCounts.put("Jan 2026", 2);
-        monthlyCounts.put("Feb 2026", 3);
-        monthlyCounts.put("Mar 2026", 2);
-        monthlyCounts.put("Apr 2026", 4);
-        monthlyCounts.put("May 2026", 3);
-        monthlyCounts.put("Jun 2026", crimes.size() > 0 ? Math.max(crimes.size(), 6) : 6);
+        // Parse dateOccurred / dateReported into YearMonth counts
+        Map<YearMonth, Integer> rawCountsByYm = new HashMap<>();
+        List<YearMonth> parsedYms = new ArrayList<>();
 
-        // Compute trailing moving average (excluding last month)
-        double trailingSum = 0;
-        int countMonths = 0;
-        for (String month : List.of("Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026")) {
-            trailingSum += monthlyCounts.get(month);
-            countMonths++;
+        for (Crime c : crimes) {
+            YearMonth ym = parseYearMonth(c.getDateOccurred());
+            if (ym == null) {
+                ym = parseYearMonth(c.getDateReported());
+            }
+            if (ym != null) {
+                rawCountsByYm.put(ym, rawCountsByYm.getOrDefault(ym, 0) + 1);
+                parsedYms.add(ym);
+            }
         }
-        double trailingAvg = countMonths > 0 ? trailingSum / countMonths : 2.8;
 
-        int recentPeriodCount = monthlyCounts.get("Jun 2026");
+        long distinctMonthsCount = parsedYms.stream().distinct().count();
 
-        // Rule-Based Early Warning: If recent period count > 1.5x trailing average -> Emerging Cluster
-        boolean isEmergingCluster = recentPeriodCount > (trailingAvg * 1.4);
+        // Edge case handling: Insufficient historical data (< 3 incidents or < 2 distinct months)
+        if (parsedYms.size() < 3 || distinctMonthsCount < 2) {
+            Map<String, Integer> minimalMap = new LinkedHashMap<>();
+            if (!parsedYms.isEmpty()) {
+                Collections.sort(parsedYms);
+                for (YearMonth ym : parsedYms.stream().distinct().sorted().toList()) {
+                    minimalMap.put(ym.format(DISPLAY_FORMATTER), rawCountsByYm.get(ym));
+                }
+            }
+            return ForecastPayload.builder()
+                    .targetDistrict(district != null ? district : "All Karnataka State")
+                    .targetCrimeType(crimeType != null ? crimeType : "All Categories")
+                    .monthlyCounts(minimalMap)
+                    .trailingMovingAverage(0.0)
+                    .recentPeriodCount(parsedYms.size())
+                    .trendDirection("INSUFFICIENT_DATA")
+                    .changePercent(0.0)
+                    .isEmergingCluster(false)
+                    .warningMessage("INSUFFICIENT DATA: Fewer than 3 historical crime incidents found for this filter combination to calculate moving average trend.")
+                    .methodologyDisclaimer("Rule-based trend detection over historical patterns, scoped for hackathon timeline — not a trained predictive ML model.")
+                    .build();
+        }
+
+        // Determine continuous date range from min YearMonth to max YearMonth
+        YearMonth minYm = Collections.min(parsedYms);
+        YearMonth maxYm = Collections.max(parsedYms);
+
+        Map<String, Integer> monthlyCounts = new LinkedHashMap<>();
+        YearMonth curr = minYm;
+        while (!curr.isAfter(maxYm)) {
+            String label = curr.format(DISPLAY_FORMATTER);
+            monthlyCounts.put(label, rawCountsByYm.getOrDefault(curr, 0));
+            curr = curr.plusMonths(1);
+        }
+
+        // Calculate trailing moving average (all months preceding the latest month)
+        List<String> monthKeys = new ArrayList<>(monthlyCounts.keySet());
+        String lastMonthKey = monthKeys.get(monthKeys.size() - 1);
+        int recentPeriodCount = monthlyCounts.get(lastMonthKey);
+
+        double trailingSum = 0;
+        int trailingMonthCount = 0;
+        for (int i = 0; i < monthKeys.size() - 1; i++) {
+            trailingSum += monthlyCounts.get(monthKeys.get(i));
+            trailingMonthCount++;
+        }
+
+        double trailingAvg = trailingMonthCount > 0 ? trailingSum / trailingMonthCount : 0.0;
+
+        // Rule-Based Early Warning: If recent period count > 1.4x trailing average -> Emerging Cluster
+        boolean isEmergingCluster = trailingAvg > 0 && recentPeriodCount > (trailingAvg * 1.4);
 
         String trendDirection;
-        if (recentPeriodCount > trailingAvg * 1.2) {
+        if (trailingAvg == 0) {
+            trendDirection = recentPeriodCount > 0 ? "INCREASING" : "STABLE";
+        } else if (recentPeriodCount > trailingAvg * 1.2) {
             trendDirection = "INCREASING";
         } else if (recentPeriodCount < trailingAvg * 0.8) {
             trendDirection = "DECREASING";
@@ -93,6 +146,23 @@ public class ForecastingService {
                 .warningMessage(warningMessage)
                 .methodologyDisclaimer("Rule-based trend detection over historical patterns, scoped for hackathon timeline — not a trained predictive ML model.")
                 .build();
+    }
+
+    private YearMonth parseYearMonth(String dateStr) {
+        if (dateStr == null || dateStr.isBlank()) return null;
+        try {
+            String cleaned = dateStr.trim();
+            if (cleaned.length() >= 7) {
+                int year = Integer.parseInt(cleaned.substring(0, 4));
+                int month = Integer.parseInt(cleaned.substring(5, 7));
+                if (month >= 1 && month <= 12) {
+                    return YearMonth.of(year, month);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Failed to parse YearMonth from date string '{}': {}", dateStr, e.getMessage());
+        }
+        return null;
     }
 
     @Data

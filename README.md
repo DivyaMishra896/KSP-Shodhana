@@ -73,8 +73,10 @@ To maintain absolute clarity and technical accuracy for hackathon evaluation, th
 - **Network Graph Integration**: `NetworkService.java` dynamically attaches `financial_transaction` graph nodes and `TRANSFERRED_FUNDS` links to linked criminals in the graph visualization. Flagged transactions render in bold red (`#DC2626`).
 
 ### 4. Crime Forecasting & Early Warning
-- **Implementation**: `ForecastingService.java` computes historical monthly incident counts, trailing moving average (e.g., 2.8), and trend direction (`INCREASING`, `STABLE`, `DECREASING`).
-- **Emerging Cluster Rule**: If recent period count > 1.4x trailing average, triggers `isEmergingCluster = true` and generates warning message: *"EMERGING CLUSTER WARNING: Recent incident volume (6) exceeds trailing average (2.8) by +114.3%"*.
+- **Implementation**: `ForecastingService.java` parses `dateOccurred`/`dateReported` timestamps from filtered crime records and dynamically aggregates incident counts into continuous monthly buckets.
+- **Dynamic Trend Detection**: Computes trailing moving average over historical months and compares against recent month volume to detect trend direction (`INCREASING`, `STABLE`, `DECREASING`).
+- **Emerging Cluster Rule**: If recent period count > 1.4x trailing average, triggers `isEmergingCluster = true` and generates warning message: *"EMERGING CLUSTER WARNING: Recent incident volume (9) exceeds trailing average (3.5) by +157.1%"*.
+- **Graceful Insufficient Data State**: Filter combinations with $<3$ incidents or $<2$ distinct months return an explicit `INSUFFICIENT_DATA` state.
 - **UI Rendering**: Interactive Early Warning badge rendered in `HeatmapPanel.tsx`.
 
 ---
@@ -83,7 +85,7 @@ To maintain absolute clarity and technical accuracy for hackathon evaluation, th
 
 In the spirit of honest technical documentation, the following components are simplified or rule-based for the hackathon prototype:
 
-1. **Rule-Based Trend Forecasting**: Crime forecasting uses moving average statistical rules over historical seed buckets rather than a trained predictive ML model (e.g. Prophet/LSTM), which requires multi-year dataset training.
+1. **Rule-Based Moving Average Trend Forecasting**: Crime forecasting dynamically aggregates monthly counts from actual `dateOccurred`/`dateReported` timestamps. When a filter combination has $<3$ historical records or $<2$ distinct months, it returns an explicit `INSUFFICIENT_DATA` state rather than extrapolating on insufficient data. The overall trend detection uses moving averages over seed timeline buckets rather than a multi-year trained predictive ML model (e.g. Prophet/LSTM).
 2. **Dataset-Scoped Sociological Insights**: Sociological aggregation reflects distributions within the local seed dataset, not validated demographic census correlation models.
 3. **Synthetic Financial Transactions**: Financial transaction records and flag triggers (large wire transfer, high frequency) are rule-generated synthetic test cases rather than live banking API streams.
 4. **Offline Demo Fallback**: When external databases (PostgreSQL/Neo4j) or live Gemini API keys are absent, services seamlessly fail over to in-memory H2/BFS/heuristic data providers.
