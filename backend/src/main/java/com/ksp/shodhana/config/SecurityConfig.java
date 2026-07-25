@@ -40,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/ai/query",
                                 "/api/v1/ai/stream",
+                                "/api/v1/auth/**",
+                                "/api/v1/analytics/**",
                                 "/api/v1/crimes/**",
                                 "/api/v1/criminals/**",
                                 "/api/v1/network/**",
