@@ -21,25 +21,22 @@ export const AuditLedgerPanel: React.FC = () => {
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [integrityVerified, setIntegrityVerified] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const fetchLedger = () => {
-    setLoading(true);
+  useEffect(() => {
+    let isMounted = true;
     fetch('/api/proxy/api/v1/audit/ledger')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data) {
+        if (isMounted && data) {
           setLogs(data.ledger || []);
           setIntegrityVerified(data.integrityVerified ?? true);
         }
       })
       .catch((e) => console.error('Audit ledger fetch error:', e))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    fetchLedger();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      .finally(() => { if (isMounted) setLoading(false); });
+    return () => { isMounted = false; };
+  }, [refreshKey]);
 
   if (!isSuperintendent) {
     return (
@@ -70,7 +67,7 @@ export const AuditLedgerPanel: React.FC = () => {
           )}
         </div>
         <button
-          onClick={fetchLedger}
+          onClick={() => { setLoading(true); setRefreshKey((k) => k + 1); }}
           className="flex items-center space-x-1 text-xs font-bold bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer"
         >
           <span>{loading ? 'Refreshing...' : 'Refresh Ledger'}</span>
