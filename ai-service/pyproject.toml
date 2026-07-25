@@ -1,0 +1,15 @@
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+# Enable essential rules: pyflakes (F), pycodestyle errors (E), isort (I), unused imports
+select = ["F", "E", "I"]
+# Ignore purely stylistic rules that aren't worth chasing for a hackathon
+ignore = [
+    "E501",  # line-too-long — we set line-length but don't enforce strictly
+    "E731",  # lambda-assignment — common pattern in FastAPI
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F401"]  # unused imports OK in tests

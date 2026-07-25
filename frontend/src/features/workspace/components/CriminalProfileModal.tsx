@@ -18,20 +18,25 @@ interface EnrichedCriminal extends Criminal {
 
 export default function CriminalProfileModal({ criminalId, onClose }: CriminalProfileModalProps) {
   const [criminal, setCriminal] = useState<EnrichedCriminal | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (!criminalId) return;
-    setLoading(true);
+    let isMounted = true;
     fetch(`/api/proxy/api/v1/criminals/${criminalId}`)
       .then((res) => res.json())
       .then((body) => {
-        if (body?.data) {
+        if (isMounted && body?.data) {
           setCriminal(body.data);
         }
       })
       .catch((err) => console.error("Failed to fetch criminal profile:", err))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [criminalId]);
 
   if (!criminalId) return null;
@@ -73,7 +78,7 @@ export default function CriminalProfileModal({ criminalId, onClose }: CriminalPr
                   <h3 className="font-serif text-lg font-bold text-slate-900 truncate">{criminal.name}</h3>
                   {criminal.alias && (
                     <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
-                      "{criminal.alias}"
+                      &quot;{criminal.alias}&quot;
                     </span>
                   )}
                 </div>

@@ -52,6 +52,16 @@ spring.neo4j:
     username: ${NEO4J_USER:neo4j}
     password: ${NEO4J_PASSWORD:}
 
+# === Management & Actuator ===
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    neo4j:
+      enabled: false
+
 # === Logging ===
 logging:
   level:

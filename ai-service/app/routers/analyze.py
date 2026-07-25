@@ -6,6 +6,7 @@ Takes fetched data + original query and returns insights with evidence.
 """
 
 from fastapi import APIRouter, HTTPException
+
 from app.schemas.analysis import AnalyzeRequest, AnalyzeResponse
 from app.services.analysis_engine import AnalysisEngine
 

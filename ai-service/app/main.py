@@ -4,11 +4,13 @@ FastAPI entry point for the Gemini-powered query understanding and analysis engi
 """
 
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import understand, analyze, settings as settings_router
+from app.routers import analyze, understand
+from app.routers import settings as settings_router
 
 
 @asynccontextmanager

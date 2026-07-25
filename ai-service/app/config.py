@@ -4,6 +4,7 @@ Uses pydantic-settings for type-safe configuration.
 """
 
 from typing import List
+
 from pydantic_settings import BaseSettings
 
 

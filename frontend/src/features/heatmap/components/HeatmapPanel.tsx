@@ -17,20 +17,35 @@ function MapUpdater({ center, zoom }: { center: { lat: number; lng: number }; zo
   return null;
 }
 
+interface CrimePoint {
+  latitude?: number;
+  longitude?: number;
+  severity?: string;
+}
+
+interface ForecastData {
+  warningMessage?: string;
+  methodologyDisclaimer?: string;
+  isEmergingCluster?: boolean;
+  changePercent?: number;
+  trendDirection?: string;
+}
+
 export default function HeatmapPanel({ data }: HeatmapPanelProps) {
-  const [spatialData, setSpatialData] = useState<HeatmapData | null>(data);
+  const [spatialData, setSpatialData] = useState<HeatmapData | null>(null);
   const [isSpatialQuery, setIsSpatialQuery] = useState<boolean>(false);
-  const [forecast, setForecast] = useState<any>(null);
+  const [forecast, setForecast] = useState<ForecastData | null>(null);
+
+  const activeData = spatialData || data;
 
   useEffect(() => {
-    setSpatialData(data);
     fetch('/api/proxy/api/v1/analytics/forecast')
       .then(res => res.json())
       .then(body => {
         if (body?.data) setForecast(body.data);
       })
       .catch(err => console.error("Forecast fetch error:", err));
-  }, [data]);
+  }, []);
 
   const handlePostGisSpatialQuery = async () => {
     try {
@@ -38,8 +53,8 @@ export default function HeatmapPanel({ data }: HeatmapPanelProps) {
       const res = await fetch('/api/proxy/api/v1/crimes/spatial/radius?lat=12.9716&lng=77.5946&radiusKm=15');
       if (res.ok) {
         const body = await res.json();
-        const crimes = body.data || [];
-        const points = crimes.map((c: any) => ({
+        const crimes: CrimePoint[] = body.data || [];
+        const points = crimes.map((c) => ({
           lat: c.latitude || 12.9716,
           lng: c.longitude || 77.5946,
           intensity: c.severity === 'CRITICAL' ? 0.9 : c.severity === 'HIGH' ? 0.7 : 0.4

@@ -14,7 +14,7 @@ interface NetworkGraphPanelProps {
 export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphWrapperRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<any>(null);
+  const graphRef = useRef<{ zoomToFit?: (duration?: number, padding?: number) => void } | null>(null);
 
   const [selectedCriminalId, setSelectedCriminalId] = useState<number | null>(null);
 
@@ -23,7 +23,7 @@ export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
     height: 400,
   });
 
-  const handleNodeClick = useCallback((node: any) => {
+  const handleNodeClick = useCallback((node: Record<string, unknown>) => {
     if (node.type === "criminal") {
       const rawId = String(node.id).replace("criminal-", "");
       const id = parseInt(rawId, 10);
@@ -83,8 +83,8 @@ export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
     return () => clearTimeout(timer);
   }, [dimensions, data]);
 
-  const nodeColor = useCallback((node: any) => {
-    const graphNode = node as GraphNode;
+  const nodeColor = useCallback((node: Record<string, unknown>) => {
+    const graphNode = node as unknown as GraphNode;
     if (graphNode.type === "crime") return "#C18C5D"; // Terracotta
     if (graphNode.type === "location") return "#949484"; // Slate Bark
     if (graphNode.type === "financial_transaction") {
@@ -93,8 +93,8 @@ export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
     return RISK_COLORS[graphNode.riskLevel as keyof typeof RISK_COLORS] || "#5D7052";
   }, []);
 
-  const nodeLabel = useCallback((node: any) => {
-    const graphNode = node as GraphNode;
+  const nodeLabel = useCallback((node: Record<string, unknown>) => {
+    const graphNode = node as unknown as GraphNode;
     const parts = [graphNode.name];
     if (graphNode.status) parts.push(`(${graphNode.status})`);
     if (graphNode.riskLevel) parts.push(`[${graphNode.riskLevel} Risk]`);
@@ -146,13 +146,13 @@ export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
           nodeLabel={nodeLabel}
           nodeRelSize={7}
           linkColor={() => "rgba(93, 112, 82, 0.25)"}
-          linkWidth={(link: any) => Math.max(1.5, (link.strength || 1) / 2.5)}
+          linkWidth={(link: Record<string, unknown>) => Math.max(1.5, ((link.strength as number) || 1) / 2.5)}
           linkDirectionalParticles={2}
           linkDirectionalParticleSpeed={0.005}
           linkDirectionalParticleColor={() => "rgba(193, 140, 93, 0.6)"}
           backgroundColor="transparent"
           nodeCanvasObjectMode={() => "after"}
-          nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+          nodeCanvasObject={(node: Record<string, unknown>, ctx: CanvasRenderingContext2D, globalScale: number) => {
             const label = node.name || "";
             const fontSize = Math.max(11 / globalScale, 3.5);
             ctx.font = `bold ${fontSize}px Nunito, sans-serif`;

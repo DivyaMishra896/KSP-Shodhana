@@ -6,10 +6,10 @@ Takes a natural language query and returns structured intent, entities, and filt
 """
 
 from fastapi import APIRouter, HTTPException
-from app.schemas.query import UnderstandRequest, UnderstandResponse
-from app.services.query_engine import QueryEngine
 
+from app.schemas.query import UnderstandRequest, UnderstandResponse
 from app.services.guardrails import guardrail_inspector
+from app.services.query_engine import QueryEngine
 
 router = APIRouter()
 query_engine = QueryEngine()

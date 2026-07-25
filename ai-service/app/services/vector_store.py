@@ -3,9 +3,9 @@ Vector Search & RAG engine for KSP Shodhana AI Service.
 Provides semantic embedding search across FIR records and suspect dossiers.
 """
 
-import math
 import logging
-from typing import Any, List, Dict
+import math
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 

@@ -4,10 +4,11 @@ Uses Gemini to parse natural language into structured query intents with local h
 """
 
 import logging
-from app.schemas.query import UnderstandResponse, ConversationMessage, Entity, QueryFilters
-from app.services.gemini_client import get_gemini_client
-from app.prompts.system_prompt import get_system_prompt
+
 from app.prompts.query_prompt import build_query_prompt
+from app.prompts.system_prompt import get_system_prompt
+from app.schemas.query import ConversationMessage, Entity, QueryFilters, UnderstandResponse
+from app.services.gemini_client import get_gemini_client
 
 logger = logging.getLogger(__name__)
 

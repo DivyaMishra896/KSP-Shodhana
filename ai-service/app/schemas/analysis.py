@@ -5,6 +5,7 @@ Uses no default values to remain compatible with Gemini structured output.
 """
 
 from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 

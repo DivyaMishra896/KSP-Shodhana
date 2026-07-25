@@ -5,6 +5,7 @@ Uses separate request/response models to avoid Gemini structured output limitati
 """
 
 from typing import Literal, Optional
+
 from pydantic import BaseModel, Field
 
 

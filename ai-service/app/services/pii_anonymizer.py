@@ -4,9 +4,9 @@ Masks sensitive identities, Aadhaar numbers, phone numbers, and license plates
 before prompts leave service boundaries, then restores them on-premise.
 """
 
-import re
 import logging
-from typing import Tuple, Dict
+import re
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 

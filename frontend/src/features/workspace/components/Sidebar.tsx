@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 const NAV_ITEMS = [

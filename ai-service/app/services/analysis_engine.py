@@ -5,10 +5,11 @@ Uses Gemini to analyze crime data and produce evidence-backed insights with loca
 
 import logging
 from typing import Any, Optional
-from app.schemas.analysis import AnalyzeResponse, InsightItem, EvidenceItem
-from app.services.gemini_client import get_gemini_client
-from app.prompts.system_prompt import get_system_prompt
+
 from app.prompts.analysis_prompt import build_analysis_prompt
+from app.prompts.system_prompt import get_system_prompt
+from app.schemas.analysis import AnalyzeResponse, EvidenceItem, InsightItem
+from app.services.gemini_client import get_gemini_client
 
 logger = logging.getLogger(__name__)
 

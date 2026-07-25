@@ -20,26 +20,26 @@ export const AuditLedgerPanel: React.FC = () => {
   const isSuperintendent = hasPermission('ROLE_SUPERINTENDENT');
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [integrityVerified, setIntegrityVerified] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const fetchLedger = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/proxy/api/v1/audit/ledger');
-      if (res.ok) {
-        const data = await res.json();
-        setLogs(data.ledger || []);
-        setIntegrityVerified(data.integrityVerified ?? true);
-      }
-    } catch (e) {
-      console.error('Audit ledger fetch error:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetchLedger();
+    let isMounted = true;
+    fetch('/api/proxy/api/v1/audit/ledger')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data) {
+          setLogs(data.ledger || []);
+          setIntegrityVerified(data.integrityVerified ?? true);
+        }
+      })
+      .catch((e) => console.error('Audit ledger fetch error:', e))
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (!isSuperintendent) {

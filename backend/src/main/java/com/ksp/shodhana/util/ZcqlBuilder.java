@@ -119,7 +119,9 @@ public class ZcqlBuilder {
      * so we escape single quotes as a safety measure.
      */
     private String escapeValue(String value) {
-        if (value == null) return "";
+        if (value == null) {
+            return "";
+        }
         return value.replace("'", "\\'");
     }
 }

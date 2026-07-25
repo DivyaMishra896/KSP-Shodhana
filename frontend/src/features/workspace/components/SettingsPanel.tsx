@@ -27,11 +27,6 @@ export default function SettingsPanel() {
     fetchSettings();
   }, [fetchSettings]);
 
-  useEffect(() => {
-    setDistrict(defaultDistrict);
-    setFallback(localFallbackActive);
-  }, [defaultDistrict, localFallbackActive]);
-
   const handleSave = () => {
     // Keep backend settings (model & API key) intact under-the-hood
     updateSettings({

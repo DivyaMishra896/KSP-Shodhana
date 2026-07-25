@@ -16,29 +16,17 @@ interface SpeakAloudButtonProps {
   size?: "sm" | "md";
 }
 
-export default function SpeakAloudButton({ text, size = "md" }: SpeakAloudButtonProps) {
+export default function SpeakAloudButton({ text }: SpeakAloudButtonProps) {
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [selectedLang, setSelectedLang] = useState<LanguageCode>("en-IN");
+  const [selectedLang, setSelectedLang] = useState<LanguageCode>(() => {
+    if (/[\u0C80-\u0CFF]/.test(text)) return "kn-IN";
+    if (/[\u0900-\u097F]/.test(text)) return "hi-IN";
+    return "en-IN";
+  });
   const [showMenu, setShowMenu] = useState(false);
-  const [supported, setSupported] = useState(true);
 
+  const isSupported = typeof window !== "undefined" && "speechSynthesis" in window;
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  // Auto-detect language from text content on mount/change
-  useEffect(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setSupported(false);
-      return;
-    }
-
-    if (/[\u0C80-\u0CFF]/.test(text)) {
-      setSelectedLang("kn-IN");
-    } else if (/[\u0900-\u097F]/.test(text)) {
-      setSelectedLang("hi-IN");
-    } else {
-      setSelectedLang("en-IN");
-    }
-  }, [text]);
 
   // Clean up synthesis on unmount
   useEffect(() => {
@@ -97,7 +85,7 @@ export default function SpeakAloudButton({ text, size = "md" }: SpeakAloudButton
     synth.speak(utterance);
   };
 
-  if (!supported) return null;
+  if (!isSupported) return null;
 
   return (
     <div className="relative inline-flex items-center gap-1">

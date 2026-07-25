@@ -3,8 +3,9 @@ Enterprise AI Guardrails & Prompt Injection Defense Engine.
 Detects prompt hijacking, system instruction overrides, and jailbreak payloads.
 """
 
-import re
 import logging
+import re
+
 from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)

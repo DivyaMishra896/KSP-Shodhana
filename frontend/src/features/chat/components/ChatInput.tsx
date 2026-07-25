@@ -17,30 +17,39 @@ export default function ChatInput() {
   const [isListening, setIsListening] = useState(false);
   const [selectedLang, setSelectedLang] = useState<LanguageCode>("en-IN");
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(true);
 
   const { sendQuery, isQuerying } = useWorkspaceStore();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<unknown>(null);
+
+  const isSpeechSupported = typeof window !== "undefined" && Boolean((window as unknown as Record<string, unknown>).SpeechRecognition || (window as unknown as Record<string, unknown>).webkitSpeechRecognition);
 
   // Initialize SpeechRecognition instance
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      (window as unknown as Record<string, unknown>).SpeechRecognition || (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      setSpeechSupported(false);
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    const recognition = new (SpeechRecognition as unknown as new () => {
+      continuous: boolean;
+      interimResults: boolean;
+      lang: string;
+      onresult: (event: { resultIndex: number; results: Array<Array<{ transcript: string }>> }) => void;
+      onerror: (event: { error: string }) => void;
+      onend: () => void;
+      start: () => void;
+      stop: () => void;
+    })();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = selectedLang;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: { resultIndex: number; results: Array<Array<{ transcript: string }>> }) => {
       let currentTranscript = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         currentTranscript += event.results[i][0].transcript;
@@ -53,7 +62,7 @@ export default function ChatInput() {
       }
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: { error: string }) => {
       console.warn("Speech recognition error:", event.error);
       setIsListening(false);
     };
@@ -67,8 +76,8 @@ export default function ChatInput() {
     return () => {
       if (recognitionRef.current) {
         try {
-          recognitionRef.current.stop();
-        } catch (e) {
+          (recognitionRef.current as { stop: () => void }).stop();
+        } catch {
           // Ignore stop errors on unmount
         }
       }
@@ -76,25 +85,26 @@ export default function ChatInput() {
   }, [selectedLang]);
 
   const toggleListening = () => {
-    if (!speechSupported || !recognitionRef.current) {
+    if (!isSpeechSupported || !recognitionRef.current) {
       alert("Voice speech recognition is not supported in this browser. Please use Chrome or Edge.");
       return;
     }
 
+    const rec = recognitionRef.current as { lang: string; start: () => void; stop: () => void };
     if (isListening) {
       try {
-        recognitionRef.current.stop();
-      } catch (e) {
+        rec.stop();
+      } catch {
         // ignore
       }
       setIsListening(false);
     } else {
       try {
-        recognitionRef.current.lang = selectedLang;
-        recognitionRef.current.start();
+        rec.lang = selectedLang;
+        rec.start();
         setIsListening(true);
-      } catch (e) {
-        console.error("Failed to start speech recognition:", e);
+      } catch (err) {
+        console.error("Failed to start speech recognition:", err);
         setIsListening(false);
       }
     }
@@ -105,8 +115,8 @@ export default function ChatInput() {
     if (!trimmed || isQuerying) return;
     if (isListening && recognitionRef.current) {
       try {
-        recognitionRef.current.stop();
-      } catch (e) {
+        (recognitionRef.current as { stop: () => void }).stop();
+      } catch {
         // ignore
       }
       setIsListening(false);

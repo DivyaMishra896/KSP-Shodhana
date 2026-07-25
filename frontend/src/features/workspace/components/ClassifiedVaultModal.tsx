@@ -70,8 +70,9 @@ export default function ClassifiedVaultModal({ isOpen, onClose }: ClassifiedVaul
       } else {
         setError("Invalid response format from admin vault.");
       }
-    } catch (err: any) {
-      setError(err?.message || "Failed to reach admin vault endpoint.");
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to reach admin vault endpoint.";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -107,8 +108,9 @@ export default function ClassifiedVaultModal({ isOpen, onClose }: ClassifiedVaul
       } else {
         setError("Invalid response format from case purge endpoint.");
       }
-    } catch (err: any) {
-      setError(err?.message || "Failed to execute case purge command.");
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to execute case purge command.";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

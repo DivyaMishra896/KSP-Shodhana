@@ -2,10 +2,14 @@
 
 import type { TimelineEvent } from "@/types/domain";
 import { formatDate } from "@/lib/utils";
-import { EVENT_TYPE_ICONS } from "@/features/timeline/types";
 
 interface TimelinePanelProps {
   data: TimelineEvent[] | null;
+}
+
+interface CustomEventItem extends TimelineEvent {
+  date?: string;
+  type?: string;
 }
 
 export default function TimelinePanel({ data }: TimelinePanelProps) {
@@ -23,8 +27,8 @@ export default function TimelinePanel({ data }: TimelinePanelProps) {
   }
 
   // Helper to extract date and type safely regardless of backend property naming
-  const getEventDate = (e: any) => e.eventDate || e.date || "";
-  const getEventType = (e: any) => e.eventType || e.type || "Event";
+  const getEventDate = (e: CustomEventItem) => e.eventDate || e.date || "";
+  const getEventType = (e: CustomEventItem) => e.eventType || e.type || "Event";
 
   // Sort by date descending
   const sorted = [...data].sort((a, b) => {
