@@ -46,14 +46,14 @@ export type CrimeStatus = "Open" | "Under Investigation" | "Closed";
 export type CriminalStatus = "Wanted" | "Arrested" | "On Bail" | "At Large" | "Convicted";
 export type Severity = "Critical" | "High" | "Medium" | "Low";
 export type RiskLevel = "High" | "Medium" | "Low";
-export type VisualizationType = "network_graph" | "heatmap" | "timeline" | "evidence";
+export type VisualizationType = "network_graph" | "heatmap" | "timeline" | "evidence" | "sociological_insights";
 
 // ===== Network Graph =====
 
 export interface GraphNode {
   id: string;
   name: string;
-  type: "criminal" | "crime" | "location";
+  type: "criminal" | "crime" | "location" | "financial_transaction";
   riskLevel?: RiskLevel;
   status?: string;
 }

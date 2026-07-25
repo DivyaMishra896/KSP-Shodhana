@@ -28,16 +28,19 @@ public class NetworkService {
     private final CriminalNetworkRepository criminalNetworkRepository;
     private final CrimeCriminalLinkRepository crimeCriminalLinkRepository;
     private final CrimeRepository crimeRepository;
+    private final com.ksp.shodhana.util.LocalDataStore localDataStore;
 
     public NetworkService(
             CriminalRepository criminalRepository,
             CriminalNetworkRepository criminalNetworkRepository,
             CrimeCriminalLinkRepository crimeCriminalLinkRepository,
-            CrimeRepository crimeRepository) {
+            CrimeRepository crimeRepository,
+            com.ksp.shodhana.util.LocalDataStore localDataStore) {
         this.criminalRepository = criminalRepository;
         this.criminalNetworkRepository = criminalNetworkRepository;
         this.crimeCriminalLinkRepository = crimeCriminalLinkRepository;
         this.crimeRepository = crimeRepository;
+        this.localDataStore = localDataStore;
     }
 
     /**
@@ -88,12 +91,13 @@ public class NetworkService {
             }
         }
 
-        // Add crimes these criminals are linked to, for richer graph context
+        // Add crimes and financial transactions these criminals are linked to
         for (WorkspacePayload.GraphNode node : new ArrayList<>(nodesMap.values())) {
             if ("criminal".equals(node.getType())) {
                 Long cId = Long.parseLong(node.getId().replace("criminal-", ""));
-                List<CrimeCriminalLink> cLinks = crimeCriminalLinkRepository.findByCriminalId(cId);
                 
+                // Add Crime links
+                List<CrimeCriminalLink> cLinks = crimeCriminalLinkRepository.findByCriminalId(cId);
                 for (CrimeCriminalLink link : cLinks) {
                     Optional<Crime> crimeOpt = crimeRepository.findById(link.getCrimeRowId());
                     if (crimeOpt.isPresent()) {
@@ -117,6 +121,32 @@ public class NetworkService {
                                 .strength(6)
                                 .build());
                     }
+                }
+
+                // Add Financial Transaction links (Feature 3: Financial Crime Analysis)
+                List<com.ksp.shodhana.model.FinancialTransaction> txns = localDataStore.getFinancialTransactions().stream()
+                        .filter(t -> t.getLinkedCriminalId() != null && t.getLinkedCriminalId().equals(cId))
+                        .toList();
+
+                for (var txn : txns) {
+                    String txnKey = "financial_transaction-" + txn.getRowId();
+                    if (!nodesMap.containsKey(txnKey)) {
+                        String nameLabel = String.format("%s (₹%,.0f)", txn.getBankName(), txn.getAmount());
+                        nodesMap.put(txnKey, WorkspacePayload.GraphNode.builder()
+                                .id(txnKey)
+                                .name(nameLabel)
+                                .type("financial_transaction")
+                                .status(Boolean.TRUE.equals(txn.getIsFlagged()) ? "FLAGGED" : "NORMAL")
+                                .riskLevel(Boolean.TRUE.equals(txn.getIsFlagged()) ? "Critical" : "Low")
+                                .build());
+                    }
+
+                    links.add(WorkspacePayload.GraphLink.builder()
+                            .source(node.getId())
+                            .target(txnKey)
+                            .type("TRANSFERRED_FUNDS")
+                            .strength(Boolean.TRUE.equals(txn.getIsFlagged()) ? 10 : 4)
+                            .build());
                 }
             }
         }

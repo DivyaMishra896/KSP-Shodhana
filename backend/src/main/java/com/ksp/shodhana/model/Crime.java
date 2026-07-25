@@ -73,6 +73,9 @@ public class Crime {
     @Column(name = "address", length = 1000)
     private String address;
 
+    @Column(name = "area_type")
+    private String areaType; // urban, semi-urban, rural
+
     @Column(name = "investigating_officer")
     private String investigatingOfficer;
 

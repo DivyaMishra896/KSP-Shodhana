@@ -20,9 +20,16 @@ function MapUpdater({ center, zoom }: { center: { lat: number; lng: number }; zo
 export default function HeatmapPanel({ data }: HeatmapPanelProps) {
   const [spatialData, setSpatialData] = useState<HeatmapData | null>(data);
   const [isSpatialQuery, setIsSpatialQuery] = useState<boolean>(false);
+  const [forecast, setForecast] = useState<any>(null);
 
   useEffect(() => {
     setSpatialData(data);
+    fetch('/api/proxy/api/v1/analytics/forecast')
+      .then(res => res.json())
+      .then(body => {
+        if (body?.data) setForecast(body.data);
+      })
+      .catch(err => console.error("Forecast fetch error:", err));
   }, [data]);
 
   const handlePostGisSpatialQuery = async () => {
@@ -77,8 +84,20 @@ export default function HeatmapPanel({ data }: HeatmapPanelProps) {
   return (
     <div className="flex h-full flex-col rounded-2xl border border-[var(--color-border)]/50 bg-white shadow-sm overflow-hidden">
       <div className="flex justify-between items-center px-4 py-2.5 bg-[var(--color-surface)] border-b border-[var(--color-border)]/50 min-h-[44px]">
-        <div className="flex items-center min-w-0 pr-2">
+        <div className="flex items-center min-w-0 pr-2 space-x-2">
           <span className="font-serif font-bold text-[var(--color-text)] text-sm whitespace-nowrap truncate tracking-normal">Crime Hotspots</span>
+          {forecast && (
+            <span
+              title={`${forecast.warningMessage} (${forecast.methodologyDisclaimer})`}
+              className={`text-[10px] font-bold px-2 py-0.5 rounded cursor-help border ${
+                forecast.isEmergingCluster
+                  ? "bg-red-500/10 text-red-700 border-red-500/30"
+                  : "bg-emerald-500/10 text-emerald-700 border-emerald-500/30"
+              }`}
+            >
+              {forecast.isEmergingCluster ? `⚠️ ↑ +${forecast.changePercent}% Cluster Warning` : `→ ${forecast.trendDirection}`}
+            </span>
+          )}
         </div>
         <div className="flex items-center space-x-2 shrink-0">
           <button

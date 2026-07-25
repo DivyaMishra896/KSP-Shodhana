@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import EvidencePanel from "@/features/evidence/components/EvidencePanel";
 import TimelinePanel from "@/features/timeline/components/TimelinePanel";
+import SociologicalInsightsPanel from "@/features/workspace/components/SociologicalInsightsPanel";
 
 // Dynamic imports for heavy visualization libraries (no SSR)
 const NetworkGraphPanel = dynamic(
@@ -35,11 +36,13 @@ export default function VisualizationGrid() {
   const showHeatmap = activeVisualizations.includes("heatmap");
   const showTimeline = activeVisualizations.includes("timeline");
   const showEvidence = activeVisualizations.includes("evidence");
+  const showSociological = activeVisualizations.includes("sociological_insights");
 
   // Collect active panel JSX nodes
   const activePanels: React.ReactNode[] = [];
   if (showNetwork) activePanels.push(<NetworkGraphPanel key="network" data={networkData} />);
   if (showHeatmap) activePanels.push(<HeatmapPanel key="heatmap" data={heatmapData} />);
+  if (showSociological) activePanels.push(<SociologicalInsightsPanel key="sociological" />);
   if (showTimeline) activePanels.push(<TimelinePanel key="timeline" data={timelineData} />);
   if (showEvidence) activePanels.push(<EvidencePanel key="evidence" data={evidenceData} />);
 

@@ -73,6 +73,9 @@ export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
     const graphNode = node as GraphNode;
     if (graphNode.type === "crime") return "#C18C5D"; // Terracotta
     if (graphNode.type === "location") return "#949484"; // Slate Bark
+    if (graphNode.type === "financial_transaction") {
+      return graphNode.status === "FLAGGED" ? "#DC2626" : "#059669"; // Red for FLAGGED, Emerald for normal
+    }
     return RISK_COLORS[graphNode.riskLevel as keyof typeof RISK_COLORS] || "#5D7052";
   }, []);
 
@@ -107,11 +110,12 @@ export default function NetworkGraphPanel({ data }: NetworkGraphPanelProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex gap-4 px-5 py-2.5 border-b border-[var(--color-border)]/50 bg-white/50 shrink-0">
+      <div className="flex gap-3 px-4 py-2 border-b border-[var(--color-border)]/50 bg-white/50 shrink-0 flex-wrap">
         <LegendItem color="#A85448" label="High Risk" />
-        <LegendItem color="#C18C5D" label="Crime / Medium" />
+        <LegendItem color="#C18C5D" label="Crime" />
+        <LegendItem color="#DC2626" label="Flagged Financial Txn" />
+        <LegendItem color="#059669" label="Financial Txn" />
         <LegendItem color="#5D7052" label="Low Risk" />
-        <LegendItem color="#949484" label="Location" />
       </div>
 
       {/* Dynamic Graph Container */}

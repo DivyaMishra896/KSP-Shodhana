@@ -78,6 +78,22 @@ public class Criminal {
     @Column(name = "person_id")
     private String personId;
 
+    @Column(name = "area_type")
+    private String areaType; // urban, semi-urban, rural
+
+    // Computed Criminology Offender Profiling Fields (Pillar 1: Explainable AI & Offender Profiling)
+    @Transient
+    private Integer priorOffenseCount;
+
+    @Transient
+    private Boolean isRepeatOffender;
+
+    @Transient
+    private Integer riskScore;
+
+    @Transient
+    private String riskExplanation;
+
     @Column(name = "created_time")
     private String createdTime;
 

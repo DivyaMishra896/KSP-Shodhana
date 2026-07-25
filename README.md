@@ -49,6 +49,47 @@ To ensure ease of technical evaluation and robust production readiness, the syst
 
 ---
 
+## 🔬 Foundational Feature Implementations (Hackathon Scope)
+
+To maintain absolute clarity and technical accuracy for hackathon evaluation, the following 5 capabilities are implemented using clean, transparent methods over real synthetic seed data. Each method is labeled as a **"foundational implementation, scoped for hackathon timeline"**:
+
+### 0. Cryptographic JJWT Token Signing & Signature Verification
+- **Implementation**: Uses `io.jsonwebtoken` (JJWT 0.12.5) with HMAC-SHA256 (`getSigningKey()`).
+- **Signature Verification**: `validateToken(token)` parses claims with `Jwts.parser().verifyWith(...)`, rejecting expired, malformed, or forged tokens.
+- **Proven Security**: `SecurityConfigTest.testForgedTokenRejection()` generates a valid token, tampers with the payload role claim (`ROLE_OFFICER` -> `ROLE_SUPERINTENDENT`), and asserts `validateToken()` rejects it due to signature mismatch.
+
+### 1. Criminology-Based Offender Profiling
+- **Implementation**: Computed fields on `Criminal` (`priorOffenseCount`, `isRepeatOffender`, `riskScore`, `riskExplanation`).
+- **Explainable Formula**:
+  $$\text{RiskScore} = \min(100, (\text{priorOffenses} \times 15) + (\text{criticalCount} \times 20) + (\text{highCount} \times 10) + (\text{recentOffenses} \times 15))$$
+- **UI Rendering**: Color-coded risk badge with plain-language explanation string (e.g. *"Risk Score: 68/100 — 4 prior offense(s) (1 Critical, 2 High), 2 within active 2025-2026 window"*).
+
+### 2. Sociological Crime Insights
+- **Implementation**: `SociologicalInsightsService.java` aggregates seed crime and offender records by demographic age group (`18-25`, `26-35`, `36-50`, `50+`) and locality area type (`Urban`, `Semi-Urban`, `Rural`).
+- **UI Rendering**: `SociologicalInsightsPanel.tsx` visualizes distribution bar charts with clear methodology disclaimer.
+
+### 3. Financial Crime & Transaction Link Analysis
+- **Implementation**: `FinancialTransaction` domain model (`@Entity`, `@Table(name = "financial_transactions")`) + `FinancialTransactionRepository` + `LocalDataStore` fallback with 18 synthetic transactions (4 rule-flagged).
+- **Network Graph Integration**: `NetworkService.java` dynamically attaches `financial_transaction` graph nodes and `TRANSFERRED_FUNDS` links to linked criminals in the graph visualization. Flagged transactions render in bold red (`#DC2626`).
+
+### 4. Crime Forecasting & Early Warning
+- **Implementation**: `ForecastingService.java` computes historical monthly incident counts, trailing moving average (e.g., 2.8), and trend direction (`INCREASING`, `STABLE`, `DECREASING`).
+- **Emerging Cluster Rule**: If recent period count > 1.4x trailing average, triggers `isEmergingCluster = true` and generates warning message: *"EMERGING CLUSTER WARNING: Recent incident volume (6) exceeds trailing average (2.8) by +114.3%"*.
+- **UI Rendering**: Interactive Early Warning badge rendered in `HeatmapPanel.tsx`.
+
+---
+
+## ⚠️ Known Limitations
+
+In the spirit of honest technical documentation, the following components are simplified or rule-based for the hackathon prototype:
+
+1. **Rule-Based Trend Forecasting**: Crime forecasting uses moving average statistical rules over historical seed buckets rather than a trained predictive ML model (e.g. Prophet/LSTM), which requires multi-year dataset training.
+2. **Dataset-Scoped Sociological Insights**: Sociological aggregation reflects distributions within the local seed dataset, not validated demographic census correlation models.
+3. **Synthetic Financial Transactions**: Financial transaction records and flag triggers (large wire transfer, high frequency) are rule-generated synthetic test cases rather than live banking API streams.
+4. **Offline Demo Fallback**: When external databases (PostgreSQL/Neo4j) or live Gemini API keys are absent, services seamlessly fail over to in-memory H2/BFS/heuristic data providers.
+
+---
+
 ## Technology Stack Architecture
 
 ```
