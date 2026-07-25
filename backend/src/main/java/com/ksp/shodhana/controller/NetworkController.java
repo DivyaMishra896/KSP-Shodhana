@@ -2,8 +2,11 @@ package com.ksp.shodhana.controller;
 
 import com.ksp.shodhana.dto.response.ApiResponse;
 import com.ksp.shodhana.dto.response.WorkspacePayload;
+import com.ksp.shodhana.service.GraphService;
 import com.ksp.shodhana.service.NetworkService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 /**
  * REST controller for criminal network graph operations.
@@ -13,9 +16,21 @@ import org.springframework.web.bind.annotation.*;
 public class NetworkController {
 
     private final NetworkService networkService;
+    private final GraphService graphService;
 
-    public NetworkController(NetworkService networkService) {
+    public NetworkController(NetworkService networkService, GraphService graphService) {
         this.networkService = networkService;
+        this.graphService = graphService;
+    }
+
+    /** Multi-hop graph path analysis between two criminal suspects */
+    @GetMapping("/path")
+    public ApiResponse<Map<String, Object>> getShortestPath(
+            @RequestParam Long sourceId,
+            @RequestParam Long targetId,
+            @RequestParam(defaultValue = "3") int maxHops) {
+        Map<String, Object> pathResult = graphService.findShortestCriminalPath(sourceId, targetId, maxHops);
+        return ApiResponse.ok(pathResult);
     }
 
     /** Get network graph centered on a specific criminal */
