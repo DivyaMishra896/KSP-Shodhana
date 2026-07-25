@@ -15,23 +15,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Resolve the backend URL from environment.
- * In development: falls back to localhost:8080 for zero-setup convenience.
- * In production: BACKEND_API_URL is required — fail fast with a clear error.
+ * Prefers process.env.BACKEND_API_URL, falling back to localhost:8080.
  */
 function getBackendUrl(): string {
-  if (process.env.BACKEND_API_URL) {
-    return process.env.BACKEND_API_URL;
-  }
-  if (process.env.NODE_ENV === "development") {
-    return "http://localhost:8080";
-  }
-  throw new Error(
-    "BACKEND_API_URL environment variable must be set in production. " +
-    "Set it in your .env file or container environment."
-  );
+  return process.env.BACKEND_API_URL || "http://localhost:8080";
 }
-
-const BACKEND_URL = getBackendUrl();
 
 export async function GET(
   request: NextRequest,
@@ -65,8 +53,9 @@ async function proxyRequest(
   request: NextRequest,
   params: { path: string[] }
 ) {
+  const backendUrl = getBackendUrl();
   const path = params.path.join("/");
-  const url = `${BACKEND_URL}/${path}`;
+  const url = `${backendUrl}/${path}`;
 
   try {
     // Forward the request to the backend
