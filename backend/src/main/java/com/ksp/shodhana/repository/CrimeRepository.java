@@ -107,4 +107,17 @@ public class CrimeRepository {
                 .filter(c -> c.getFirNumber() != null && c.getFirNumber().equalsIgnoreCase(firNumber))
                 .findFirst();
     }
+
+    public void deleteById(Long id) {
+        try {
+            if (crimeJpaRepository.existsById(id)) {
+                crimeJpaRepository.deleteById(id);
+                log.info("Deleted crime record ID {} from Spring Data JPA database", id);
+            }
+        } catch (Exception e) {
+            log.warn("JPA deleteById failed: {}", e.getMessage());
+        }
+        localDataStore.getCrimes().removeIf(c -> c.getRowId() != null && c.getRowId().equals(id));
+        log.info("Purged crime record ID {} from local in-memory data store", id);
+    }
 }

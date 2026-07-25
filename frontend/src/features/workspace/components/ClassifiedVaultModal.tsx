@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAuthStore } from "@/features/auth/useAuthStore";
-import { apiClient } from "@/lib/api-client";
 
 interface ClassifiedVaultModalProps {
   isOpen: boolean;
@@ -10,9 +9,13 @@ interface ClassifiedVaultModalProps {
 }
 
 interface VaultData {
+  crimeId: number;
   classificationLevel: string;
   accessGrantedRole: string;
   firNumber: string;
+  crimeType: string;
+  district: string;
+  policeStation: string;
   unredactedLeadOfficer: string;
   unredactedAadhaarNo: string;
   unredactedPhoneNo: string;
@@ -20,11 +23,21 @@ interface VaultData {
   vaultClearanceTimestamp: number;
 }
 
+interface PurgeData {
+  purgedCrimeId: number;
+  purgedFirNumber: string;
+  status: string;
+  authorizedBy: string;
+  timestamp: number;
+}
+
 export default function ClassifiedVaultModal({ isOpen, onClose }: ClassifiedVaultModalProps) {
   const { currentRole, jwtToken } = useAuthStore();
   const [data, setData] = useState<VaultData | null>(null);
+  const [purgeData, setPurgeData] = useState<PurgeData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [selectedCrimeId, setSelectedCrimeId] = useState<number>(1);
 
   if (!isOpen) return null;
 
@@ -32,10 +45,10 @@ export default function ClassifiedVaultModal({ isOpen, onClose }: ClassifiedVaul
     setLoading(true);
     setError(null);
     setData(null);
+    setPurgeData(null);
 
     try {
-      // Direct API proxy fetch using current role's Bearer JWT
-      const res = await fetch("/api/proxy/api/v1/admin/unredacted-dossier/1", {
+      const res = await fetch(`/api/proxy/api/v1/admin/unredacted-dossier/${selectedCrimeId}`, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
           "Content-Type": "application/json",
@@ -46,7 +59,7 @@ export default function ClassifiedVaultModal({ isOpen, onClose }: ClassifiedVaul
         if (res.status === 403) {
           setError("HTTP 403 FORBIDDEN — Cryptographic JJWT signature verification succeeded, but access was DENIED because your current role does not possess ROLE_SUPERINTENDENT clearance.");
         } else {
-          setError(`HTTP ${res.status} Error accessing classified vault.`);
+          setError(`HTTP ${res.status} Error accessing classified vault for Crime ID ${selectedCrimeId}.`);
         }
         return;
       }
@@ -64,6 +77,43 @@ export default function ClassifiedVaultModal({ isOpen, onClose }: ClassifiedVaul
     }
   };
 
+  const handleTestPurgeCase = async () => {
+    setLoading(true);
+    setError(null);
+    setData(null);
+    setPurgeData(null);
+
+    try {
+      const res = await fetch(`/api/proxy/api/v1/admin/purge-case/${selectedCrimeId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        if (res.status === 403) {
+          setError("HTTP 403 FORBIDDEN — Administrative Case Purge DENIED. Requires ROLE_SUPERINTENDENT clearance.");
+        } else {
+          setError(`HTTP ${res.status} Error purging case ID ${selectedCrimeId}.`);
+        }
+        return;
+      }
+
+      const body = await res.json();
+      if (body?.data) {
+        setPurgeData(body.data);
+      } else {
+        setError("Invalid response format from case purge endpoint.");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to execute case purge command.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
       <div className="w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl overflow-hidden">
@@ -72,7 +122,7 @@ export default function ClassifiedVaultModal({ isOpen, onClose }: ClassifiedVaul
           <div className="flex items-center space-x-2">
             <span className="text-base">🔒</span>
             <span className="font-serif font-extrabold text-sm tracking-wide text-[#F0EBE5]">
-              Classified Intelligence PII Vault
+              Classified Intelligence & Admin Vault
             </span>
           </div>
           <button
@@ -95,28 +145,66 @@ export default function ClassifiedVaultModal({ isOpen, onClose }: ClassifiedVaul
             </span>
           </div>
 
-          <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-            Test the live Spring Security RBAC gate at <code className="bg-black/5 px-1 py-0.5 rounded text-[11px] font-mono text-[var(--color-primary)]">GET /api/v1/admin/unredacted-dossier/1</code>. This route is strictly protected and requires <strong className="text-[var(--color-text)]">ROLE_SUPERINTENDENT</strong>.
-          </p>
+          <div className="flex items-center justify-between gap-3 text-xs">
+            <label className="font-bold text-[var(--color-text)] shrink-0">Select Crime Record ID:</label>
+            <select
+              value={selectedCrimeId}
+              onChange={(e) => setSelectedCrimeId(Number(e.target.value))}
+              className="flex-1 py-1 px-2.5 rounded-lg border border-[var(--color-border)] bg-white text-xs font-semibold"
+            >
+              <option value={1}>ID 1 — FIR KA-CR-2024-001 (Bengaluru Robbery)</option>
+              <option value={2}>ID 2 — FIR KA-CR-2024-002 (Mysuru Cyber Heist)</option>
+              <option value={3}>ID 3 — FIR KA-CR-2024-003 (Mangaluru Narcotics)</option>
+              <option value={16}>ID 16 — FIR KA-CR-2024-016 (Hubballi Theft)</option>
+            </select>
+          </div>
 
-          <button
-            onClick={handleTestVaultAccess}
-            disabled={loading}
-            className="w-full py-2.5 px-4 rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-xs font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
-          >
-            {loading ? "Verifying JJWT Signature & Clearance..." : "Test Vault Access Endpoint"}
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={handleTestVaultAccess}
+              disabled={loading}
+              className="py-2.5 px-3 rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-xs font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+            >
+              {loading ? "Verifying..." : "🔓 Unmask Vault PII"}
+            </button>
+            <button
+              onClick={handleTestPurgeCase}
+              disabled={loading}
+              className="py-2.5 px-3 rounded-xl bg-red-700 hover:bg-red-800 text-white text-xs font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+            >
+              {loading ? "Processing..." : "⚠️ Purge Case Record"}
+            </button>
+          </div>
 
           {/* Access Granted Box */}
           {data && (
             <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-2 animate-fade-in">
-              <div className="flex items-center space-x-2 text-emerald-800 font-extrabold uppercase tracking-wider text-[11px]">
+              <div className="flex items-center justify-between text-emerald-800 font-extrabold uppercase tracking-wider text-[11px]">
                 <span>✅ ACCESS GRANTED — {data.accessGrantedRole}</span>
+                <span className="text-[10px] bg-emerald-200 px-1.5 py-0.5 rounded font-mono">{data.firNumber}</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-emerald-500/20 font-medium">
-                <div><span className="text-slate-500">Unmasked Aadhaar:</span> <strong className="text-slate-900">{data.unredactedAadhaarNo}</strong></div>
-                <div><span className="text-slate-500">Unmasked Phone:</span> <strong className="text-slate-900">{data.unredactedPhoneNo}</strong></div>
-                <div className="col-span-2"><span className="text-slate-500">Offshore Account:</span> <strong className="text-slate-900 font-mono">{data.unredactedOffshoreAccount}</strong></div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-emerald-500/20 font-medium text-slate-800">
+                <div><span className="text-slate-500">Crime Type:</span> <strong>{data.crimeType}</strong></div>
+                <div><span className="text-slate-500">District:</span> <strong>{data.district}</strong></div>
+                <div><span className="text-slate-500">Unmasked Aadhaar:</span> <strong className="font-mono text-slate-900">{data.unredactedAadhaarNo}</strong></div>
+                <div><span className="text-slate-500">Unmasked Phone:</span> <strong className="font-mono text-slate-900">{data.unredactedPhoneNo}</strong></div>
+                <div className="col-span-2"><span className="text-slate-500">Lead Officer:</span> <strong>{data.unredactedLeadOfficer}</strong></div>
+                <div className="col-span-2"><span className="text-slate-500">Swiss Offshore Account:</span> <strong className="text-slate-900 font-mono">{data.unredactedOffshoreAccount}</strong></div>
+              </div>
+            </div>
+          )}
+
+          {/* Case Purge Success Box */}
+          {purgeData && (
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2 animate-fade-in">
+              <div className="flex items-center justify-between text-amber-900 font-extrabold uppercase tracking-wider text-[11px]">
+                <span>🚨 CASE PURGED & SHA-256 LOGGED</span>
+                <span className="text-[10px] bg-amber-200 px-1.5 py-0.5 rounded font-mono">{purgeData.purgedFirNumber}</span>
+              </div>
+              <div className="text-[11px] pt-1 border-t border-amber-500/20 space-y-1 text-slate-800">
+                <p>Purged Crime ID: <strong className="font-mono">{purgeData.purgedCrimeId}</strong></p>
+                <p>Authorization: <strong className="text-amber-900">{purgeData.authorizedBy}</strong></p>
+                <p className="text-[10px] text-slate-500 italic">Record removed from JPA Repository and logged into SHA-256 WORM Audit Ledger.</p>
               </div>
             </div>
           )}
