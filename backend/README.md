@@ -60,9 +60,9 @@ mvn spring-boot:run
 * `GET /api/v1/ai/stream?query=...`: Real-time SSE token-by-token streaming endpoint.
 
 ### Auth & Security (RBAC)
-* `POST /api/v1/auth/token`: Issues cryptographic signed JJWT tokens (`ROLE_SUPERINTENDENT`, `ROLE_INSPECTOR`, `ROLE_OFFICER`).
-* `GET /api/v1/admin/unredacted-dossier/{crimeId}`: **Restricted Vault PII Endpoint** (Requires `ROLE_SUPERINTENDENT`). Returns unmasked classified Aadhaar, phone, and offshore Swiss account data.
-* `POST /api/v1/admin/purge-case/{crimeId}`: **Restricted Admin Action** (Requires `ROLE_SUPERINTENDENT`). High-security administrative case purge with cryptographic audit logging.
+* `POST /api/v1/auth/token`: Issues cryptographic signed JJWT tokens (`ROLE_SUPERINTENDENT`, `ROLE_INSPECTOR`, `ROLE_OFFICER`). ⚠️ **No credential check** — any badge + role combination is accepted; JWT signature/RBAC enforcement downstream is genuine.
+* `GET /api/v1/admin/unredacted-dossier/{crimeId}`: **Restricted Vault PII Endpoint** (Requires `ROLE_SUPERINTENDENT`). Returns Aadhaar, phone, and offshore account string deterministically derived from a hash of the FIR number — illustrates the RBAC gate; values are hash-seeded synthetic constants, not real PII unmasking.
+* `POST /api/v1/admin/purge-case/{crimeId}`: **Restricted Admin Action** (Requires `ROLE_SUPERINTENDENT`). Deletes the crime record from JPA repository and writes a cryptographic SHA-256 audit entry. Audit note body is a fixed template string.
 * `GET /api/v1/audit/ledger`: WORM Cryptographic SHA-256 ledger endpoint.
 
 ### Record Management & Intelligence
@@ -77,3 +77,15 @@ mvn spring-boot:run
 * `GET /api/v1/analytics/financial`: Financial transaction link analysis.
 * `GET /api/v1/timeline/{investigationId}`: Returns chronological investigation event timeline.
 * `GET /api/v1/reports/{reportId}/preview`: Generates printable HTML investigation case dossier.
+
+---
+
+## ⚠️ Known Limitations
+
+| Area | What is Real | What is Simplified |
+|---|---|---|
+| Token issuance | HMAC-SHA256 JWT signed; signature verification & RBAC genuine | No password check — any badge+role accepted |
+| Admin Vault PII | RBAC (`ROLE_SUPERINTENDENT`) enforced | Values are hash-seeded synthetic constants, not real field decryption |
+| Case Purge | Deletes record from JPA + writes SHA-256 audit entry | Audit note is a fixed template string |
+| Graph traversal | Genuine multi-hop BFS over seeded co-accused graph | Neo4j Cypher only fires when a live Neo4j container is connected |
+| Row-Level Security | Real PostgreSQL RLS SQL defined in `V2__row_level_security.sql` | Only enforced in `docker-compose.yml` PostgreSQL mode; H2 has none |

@@ -52,7 +52,7 @@ The system is designed with a **hybrid architecture** that supports both a zero-
 | **Persistence Engine** | Spring Data JPA with H2 In-Memory DB (`JpaDataInitializer` seeds 16 entities) | PostgreSQL 15 + PostGIS (`V1__init_schema.sql` & `V2__row_level_security.sql`) |
 | **Spatial Mapping** | LocationTech JTS `Point` (`geometry(Point, 4326)`) with Bounding-Box + Haversine Radius | Native PostGIS Spatial Queries (`ST_DWithin` on geometry column) |
 | **Graph Traversal** | `GraphService` In-Memory Multi-Hop Breadth-First Search (BFS) Traversal | `GraphService` Neo4j `Driver` bean running real Cypher queries |
-| **Security & Auth** | `SecurityFilterChain` + `JwtAuthenticationFilter` (`.permitAll()` on demo routes) | `SecurityFilterChain` + JWT Role Enforcement (`ROLE_SUPERINTENDENT`) |
+| **Security & Auth** | `SecurityFilterChain` + `JwtAuthenticationFilter` + real HMAC-SHA256 JWT signing/verification; `POST /api/v1/auth/token` issues signed tokens (⚠️ no credential check — any badge+role accepted) | `SecurityFilterChain` + JWT Role Enforcement (`ROLE_SUPERINTENDENT`) with full credential validation |
 | **AI Processing** | FastAPI + Gemini `gemini-flash-lite-latest` + Local Offline Heuristics | FastAPI + Gemini API + TF-IDF/Cosine RAG Vector Store (`vector_store.py`) |
 
 ---
@@ -102,3 +102,17 @@ The codebase includes automated unit test suites for verification:
 - **Backend Tests**: `mvn test` executes `SecurityConfigTest`, `GraphServiceTest`, `AuditLedgerServiceTest`, and `JpaRepositoryTest`.
 - **FastAPI Tests**: `pytest` executes `test_pii_anonymizer.py`.
 - **CI Pipeline**: GitHub Actions (`.github/workflows/ci.yml`) runs automated builds and tests on every push to `dev`.
+
+---
+
+## 5. Known Limitations & Honest Disclosures
+
+The following are intentional simplifications scoped to the hackathon timeline:
+
+| Limitation | What is Real | What is Simplified |
+|---|---|---|
+| **Token issuance** (`POST /api/v1/auth/token`) | HMAC-SHA256 JWT signed with configurable secret; signature verification and RBAC are genuine | No password / credential check before issuance — any badge + role pair is accepted |
+| **Admin Vault PII** (`/api/v1/admin/unredacted-dossier/{crimeId}`) | RBAC enforcement (`ROLE_SUPERINTENDENT` required) is real; Aadhaar / account values are deterministically generated from a hash of the FIR number | Not decrypting an encrypted field on the record — values are hash-seeded demo constants |
+| **Case Purge** (`POST /api/v1/admin/purge-case/{crimeId}`) | Deletes the record from JPA repository and writes a SHA-256 audit ledger entry | Audit note body is a fixed template string, not a snapshot of pre-deletion state |
+| **Graph traversal** | `GraphService` runs genuine multi-hop BFS over the in-memory co-accused graph seeded at startup | Neo4j Cypher path only executes when a live Neo4j container is connected; out-of-box always runs BFS fallback |
+| **Row-Level Security** | `V2__row_level_security.sql` defines real PostgreSQL RLS policies | RLS is only enforced in the full `docker-compose.yml` PostgreSQL mode; H2 in-memory mode has no RLS |

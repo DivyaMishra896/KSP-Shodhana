@@ -139,6 +139,7 @@ To maintain absolute clarity and technical accuracy for hackathon evaluation, th
 - **Implementation**: Uses `io.jsonwebtoken` (JJWT 0.12.5) with HMAC-SHA256 (`getSigningKey()`).
 - **Signature Verification**: `validateToken(token)` parses claims with `Jwts.parser().verifyWith(...)`, rejecting expired, malformed, or forged tokens.
 - **Role Enforcement**: Issues signed tokens via `POST /api/v1/auth/token` with green `JWT ✓` indicator badge in UI.
+- **⚠️ Scope disclosure**: The token endpoint issues a valid signed JWT for whatever badge number and role is requested in the body — there is no password or credential check before issuance. This intentionally simplifies the demo flow; the JWT signature verification and RBAC enforcement downstream are genuine.
 
 ### 1. Criminology-Based Offender Profiling
 - **Implementation**: Computed fields on `Criminal` (`priorOffenseCount`, `isRepeatOffender`, `riskScore`, `riskExplanation`).
@@ -189,6 +190,20 @@ docker-compose up --build
 ├── .env.example          # Root environment template (all Docker vars)
 └── docker-compose.yml    # Multi-container orchestration (PostGIS, Neo4j, App Services)
 ```
+
+---
+
+## ⚠️ Known Limitations
+
+The following are intentional simplifications made within the hackathon timeline. Each is disclosed here for accurate evaluation.
+
+| Area | What the code actually does | What it does NOT do |
+|---|---|---|
+| **Token issuance** (`POST /api/v1/auth/token`) | Issues a real HMAC-SHA256–signed JWT; `validateToken()` and RBAC enforcement are genuine | No credential / password check before issuance — any badge number + role combination is accepted |
+| **Admin Vault PII** (`GET /api/v1/admin/unredacted-dossier/{crimeId}`) | Returns deterministic synthetic PII derived from a hash of the FIR number (Aadhaar, phone, account string) demonstrating the RBAC gate works | Does not decrypt or unmask an encrypted field on the actual crime record; the values are hash-seeded demo constants |
+| **Case Purge** (`POST /api/v1/admin/purge-case/{crimeId}`) | Deletes the crime record from the JPA repository and writes a cryptographic audit entry | The audit note content is a fixed template string — it does not snapshot the pre-deletion state |
+| **Graph traversal** | `GraphService` performs genuine multi-hop BFS over the in-memory co-accused adjacency map seeded at startup | The Neo4j Cypher path is only active when a live Neo4j container is connected; out-of-box evaluation always uses the BFS fallback |
+| **Row-Level Security** | `V2__row_level_security.sql` defines real PostgreSQL RLS policies | RLS is only enforced when running the full `docker-compose.yml` stack with PostgreSQL; H2 mode has no RLS |
 
 ---
 
